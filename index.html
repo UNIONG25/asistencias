@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Asistencias - AAG</title>
-    <!-- Tailwind CSS para diseño moderno y responsivo -->
+    <title>Control de Asistencias - Empresa</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Supabase JS Client v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- FontAwesome para iconos -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
@@ -20,7 +20,7 @@
                 <i class="fa-solid fa-clipboard-user"></i> Control de Asistencias
             </h1>
             <div id="user-status" class="hidden flex items-center gap-4">
-                <span id="admin-badge" class="bg-indigo-700 text-xs px-3 py-1 rounded-full uppercase tracking-wider font-semibold">Administrador</span>
+                <span id="role-badge" class="bg-indigo-700 text-xs px-3 py-1 rounded-full uppercase tracking-wider font-semibold"></span>
                 <button onclick="cerrarSesion()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-1.5 rounded text-sm transition font-medium">
                     <i class="fa-solid fa-right-from-bracket"></i> Salir
                 </button>
@@ -31,14 +31,14 @@
     <!-- CONTENIDO PRINCIPAL -->
     <main class="max-w-5xl mx-auto px-4 py-8 flex-grow w-full">
 
-        <!-- VISTA 1: LOGIN DE ADMINISTRADOR -->
+        <!-- VISTA DE LOGIN -->
         <section id="view-login" class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg border border-slate-100 mt-10">
             <div class="text-center mb-6">
                 <div class="bg-indigo-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-indigo-600 text-2xl">
                     <i class="fa-solid fa-lock"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-900">Acceso Administrativo</h2>
-                <p class="text-sm text-slate-500 mt-1">Ingrese la clave de acceso para gestionar empleados y asistencia.</p>
+                <h2 class="text-2xl font-bold text-slate-900">Acceso al Sistema</h2>
+                <p class="text-sm text-slate-500 mt-1">Ingrese su clave según el nivel de autorización requerido.</p>
             </div>
             
             <form id="form-login" onsubmit="manejarLogin(event)" class="space-y-4">
@@ -48,19 +48,16 @@
                            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                 </div>
                 <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2.5 rounded-lg transition shadow-sm">
-                    Ingresar al Sistema
+                    Ingresar
                 </button>
             </form>
-            <div class="mt-4 text-center text-xs text-slate-400">
-                Clave por defecto: <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">admin123</span>
-            </div>
         </section>
 
-        <!-- VISTA 2: PANEL PRINCIPAL (ADMIN + ASISTENCIA) -->
+        <!-- VISTA DEL PANEL -->
         <section id="view-dashboard" class="hidden space-y-6">
             
-            <!-- Pestañas de Navegación -->
-            <div class="flex border-b border-slate-200 gap-4">
+            <!-- Pestañas de Navegación (Condicionadas por rol) -->
+            <div id="nav-tabs" class="flex border-b border-slate-200 gap-4">
                 <button onclick="cambiarPestana('asistencia')" id="tab-asistencia" class="pb-3 px-4 font-semibold border-b-2 border-indigo-600 text-indigo-600 transition">
                     <i class="fa-solid fa-calendar-check mr-2"></i> Registro de Asistencia Diario
                 </button>
@@ -74,9 +71,8 @@
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h3 class="text-lg font-bold text-slate-800">Pase de Lista Diario</h3>
-                        <p class="text-sm text-slate-500">Fecha activa de registro: <span id="fecha-actual-label" class="font-semibold text-indigo-600"></span></p>
+                        <p class="text-sm text-slate-500">Fecha activa: <span id="fecha-actual-label" class="font-semibold text-indigo-600"></span></p>
                     </div>
-                    <!-- Buscador Dinámico -->
                     <div class="w-full md:w-72 relative">
                         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
                             <i class="fa-solid fa-magnifying-glass"></i>
@@ -86,7 +82,6 @@
                     </div>
                 </div>
 
-                <!-- Lista de Asistencia -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse">
@@ -98,9 +93,7 @@
                                     <th class="py-3 px-4 text-center">Estado (Asistió / No Asistió)</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabla-asistencia-body" class="divide-y divide-slate-100 text-sm">
-                                <!-- Carga dinámica -->
-                            </tbody>
+                            <tbody id="tabla-asistencia-body" class="divide-y divide-slate-100 text-sm"></tbody>
                         </table>
                     </div>
                     <div id="asistencia-vacia" class="hidden p-8 text-center text-slate-400">
@@ -109,9 +102,8 @@
                 </div>
             </div>
 
-            <!-- CONTENEDOR PESTAÑA: GESTIÓN EMPLEADOS -->
+            <!-- CONTENEDOR PESTAÑA: GESTIÓN EMPLEADOS (SOLO NIVEL DIOS) -->
             <div id="content-empleados" class="hidden space-y-6">
-                <!-- Formulario Agregar Empleado -->
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                     <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fa-solid fa-user-plus mr-2 text-indigo-600"></i> Registrar Nuevo Empleado</h3>
                     <form id="form-empleado" onsubmit="guardarEmpleado(event)" class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -143,7 +135,6 @@
                     </form>
                 </div>
 
-                <!-- Listado y Administración de Empleados -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
                     <div class="p-4 border-b border-slate-100 flex justify-between items-center">
                         <h4 class="font-bold text-slate-800">Empleados Registrados</h4>
@@ -160,9 +151,7 @@
                                     <th class="py-3 px-4 text-center">Acciones</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabla-empleados-body" class="divide-y divide-slate-100 text-sm">
-                                <!-- Carga dinámica -->
-                            </tbody>
+                            <tbody id="tabla-empleados-body" class="divide-y divide-slate-100 text-sm"></tbody>
                         </table>
                     </div>
                 </div>
@@ -172,38 +161,28 @@
 
     </main>
 
-    <!-- LOGICA DE LA APLICACION -->
+    <!-- SCRIPT -->
     <script>
-        // ==========================================
-        // 1. CONFIGURACIÓN DE SUPABASE
-        // ==========================================
-        const SUPABASE_URL = 'TU_SUPABASE_URL_AQUÍ';       // Reemplaza con tu URL de Supabase
-        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY_AQUÍ'; // Reemplaza con tu Anon Key de Supabase
-
+        const SUPABASE_URL = 'TU_SUPABASE_URL_AQUÍ';
+        const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY_AQUÍ';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Estado local de la aplicación
         let listaEmpleados = [];
-        let registroAsistenciaHoy = {}; // empleado_id -> estado ('asistio' o 'no_asistio')
+        let registroAsistenciaHoy = {};
         let fechaActualStr = '';
+        let rolUsuario = ''; // 'dios' o 'asistencia'
 
-        // Inicializar fecha actual (YYYY-MM-DD)
         function inicializarFecha() {
             const hoy = new Date();
             const anio = hoy.getFullYear();
             const mes = String(hoy.getMonth() + 1).padStart(2, '0');
             const dia = String(hoy.getDate()).padStart(2, '0');
-            fechaActualStr = `${anio}-${mes}-${mes ? `${anio}-${mes}-${dia}` : ''}`;
             fechaActualStr = `${anio}-${mes}-${dia}`;
             
-            // Mostrar fecha bonita
             const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             document.getElementById('fecha-actual-label').textContent = hoy.toLocaleDateString('es-ES', opciones);
         }
 
-        // ==========================================
-        // 2. SEGURIDAD Y HASH SHA-256 (GITHUB AUTH SIMULADA)
-        // ==========================================
         async function calcularHashSHA256(texto) {
             const encoder = new TextEncoder();
             const datos = encoder.encode(texto);
@@ -218,57 +197,78 @@
             const hashIngresado = await calcularHashSHA256(claveIngresada);
 
             try {
-                // Consultar hash almacenado en Supabase
                 const { data, error } = await supabaseClient
                     .from('sys_config')
-                    .select('valor_hash')
-                    .eq('clave_key', 'admin_password')
-                    .single();
+                    .select('clave_key, valor_hash');
 
                 if (error || !data) {
-                    alert('Error al verificar la clave en el servidor.');
+                    alert('Error al verificar credenciales.');
                     return;
                 }
 
-                if (hashIngresado === data.valor_hash) {
-                    localStorage.setItem('admin_autenticado', 'true');
-                    mostrarDashboard();
+                let rolEncontrado = '';
+                data.forEach(row => {
+                    if (row.clave_key === 'admin_master_hash' && row.valor_hash === hashIngresado) {
+                        rolEncontrado = 'dios';
+                    }
+                    if (row.clave_key === 'admin_asistencia_hash' && row.valor_hash === hashIngresado) {
+                        rolEncontrado = 'asistencia';
+                    }
+                });
+
+                if (rolEncontrado) {
+                    localStorage.setItem('auth_rol', rolEncontrado);
+                    mostrarDashboard(rolEncontrado);
                 } else {
-                    alert('Clave de administrador incorrecta.');
+                    alert('Clave de acceso incorrecta.');
                     document.getElementById('login-password').value = '';
                 }
             } catch (err) {
                 console.error(err);
-                alert('No se pudo conectar con Supabase. Verifica tus credenciales.');
+                alert('No se pudo conectar con Supabase.');
             }
         }
 
         function verificarSesionPrevia() {
-            if (localStorage.getItem('admin_autenticado') === 'true') {
-                mostrarDashboard();
+            const rolGuardado = localStorage.getItem('auth_rol');
+            if (rolGuardado) {
+                mostrarDashboard(rolGuardado);
             }
         }
 
         function cerrarSesion() {
-            localStorage.removeItem('admin_autenticado');
+            localStorage.removeItem('auth_rol');
             document.getElementById('view-dashboard').classList.add('hidden');
             document.getElementById('user-status').classList.add('hidden');
             document.getElementById('view-login').classList.remove('hidden');
             document.getElementById('login-password').value = '';
         }
 
-        function mostrarDashboard() {
+        function mostrarDashboard(rol) {
+            rolUsuario = rol;
             document.getElementById('view-login').classList.add('hidden');
             document.getElementById('view-dashboard').classList.remove('hidden');
             document.getElementById('user-status').classList.remove('hidden');
+            
+            const badge = document.getElementById('role-badge');
+            const navTabs = document.getElementById('nav-tabs');
+
+            if (rol === 'dios') {
+                badge.textContent = 'Administrador Dios';
+                badge.className = "bg-purple-700 text-xs px-3 py-1 rounded-full uppercase tracking-wider font-semibold text-white";
+                navTabs.style.display = 'flex'; // Muestra todas las pestañas
+            } else {
+                badge.textContent = 'Control de Asistencia';
+                badge.className = "bg-emerald-700 text-xs px-3 py-1 rounded-full uppercase tracking-wider font-semibold text-white";
+                navTabs.style.display = 'none'; // Oculta la barra de pestañas para que vayan directo al pase de lista
+            }
+
             inicializarFecha();
             cargarDatosCompletos();
         }
 
-        // ==========================================
-        // 3. NAVEGACIÓN ENTRE PESTAÑAS
-        // ==========================================
         function cambiarPestana(pestana) {
+            if (rolUsuario !== 'dios') return; // Seguridad extra
             const btnAsis = document.getElementById('tab-asistencia');
             const btnEmp = document.getElementById('tab-empleados');
             const contentAsis = document.getElementById('content-asistencia');
@@ -289,9 +289,6 @@
             }
         }
 
-        // ==========================================
-        // 4. GESTIÓN DE EMPLEADOS
-        // ==========================================
         async function cargarDatosCompletos() {
             await cargarEmpleados();
             await cargarAsistenciasHoy();
@@ -303,11 +300,7 @@
                 .select('*')
                 .order('apellidos', { ascending: true });
 
-            if (error) {
-                console.error('Error cargando empleados:', error);
-                return;
-            }
-
+            if (error) return;
             listaEmpleados = data || [];
             document.getElementById('contador-empleados').textContent = `${listaEmpleados.length} empleado(s)`;
             
@@ -318,12 +311,10 @@
         function renderizarTablaEmpleados(empleados) {
             const tbody = document.getElementById('tabla-empleados-body');
             tbody.innerHTML = '';
-
             if (empleados.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">No hay empleados registrados.</td></tr>`;
                 return;
             }
-
             empleados.forEach(emp => {
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
@@ -333,7 +324,7 @@
                     <td class="py-3 px-4 text-slate-600">${emp.fecha_ingreso}</td>
                     <td class="py-3 px-4 text-slate-600">${emp.horario}</td>
                     <td class="py-3 px-4 text-center">
-                        <button onclick="eliminarEmpleado(${emp.id})" class="text-red-500 hover:text-red-700 p-1.5 rounded transition" title="Eliminar empleado">
+                        <button onclick="eliminarEmpleado(${emp.id})" class="text-red-500 hover:text-red-700 p-1.5 rounded transition" title="Eliminar">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                     </td>
@@ -344,6 +335,8 @@
 
         async function guardarEmpleado(event) {
             event.preventDefault();
+            if (rolUsuario !== 'dios') return;
+
             const nuevoEmp = {
                 nombres: document.getElementById('emp-nombres').value.trim(),
                 apellidos: document.getElementById('emp-apellidos').value.trim(),
@@ -353,7 +346,6 @@
             };
 
             const { error } = await supabaseClient.from('empleados').insert([nuevoEmp]);
-
             if (error) {
                 alert('Error al registrar empleado (¿Cédula duplicada?): ' + error.message);
                 return;
@@ -365,7 +357,8 @@
         }
 
         async function eliminarEmpleado(id) {
-            if (!confirm('¿Está seguro de eliminar este empleado y todo su historial?')) return;
+            if (rolUsuario !== 'dios') return;
+            if (!confirm('¿Está seguro de eliminar este empleado?')) return;
 
             const { error } = await supabaseClient.from('empleados').delete().eq('id', id);
             if (error) {
@@ -375,23 +368,16 @@
             await cargarDatosCompletos();
         }
 
-        // ==========================================
-        // 5. REGISTRO DE ASISTENCIA DINÁMICO
-        // ==========================================
         async function cargarAsistenciasHoy() {
             const { data, error } = await supabaseClient
                 .from('asistencias')
                 .select('*')
                 .eq('fecha', fechaActualStr);
 
-            if (error) {
-                console.error('Error cargando asistencias:', error);
-                return;
-            }
-
+            if (error) return;
             registroAsistenciaHoy = {};
             (data || []).forEach(reg => {
-                registroAsistenciaHoy[reg.empleado_id] = reg.estado; // 'asistio' o 'no_asistio'
+                registroAsistenciaHoy[reg.empleado_id] = reg.estado;
             });
 
             renderizarTablaAsistencia(listaEmpleados);
@@ -409,14 +395,10 @@
                 vacioDiv.classList.add('hidden');
             }
 
-            // Regla de comodidad: Si hay 10 o menos empleados, se muestra la lista completa por defecto.
-            // Si hay más de 10, se filtran según el buscador activo.
             let empleadosVisibles = empleadosAMostrar;
             const textoBusqueda = document.getElementById('input-buscar').value.toLowerCase().trim();
 
             if (listaEmpleados.length > 10 && textoBusqueda === '') {
-                // Si son más de 10 y no hay búsqueda activa, podemos mostrar un mensaje guía o lista inicial vacía para rapidez
-                // O mostrar los primeros 10. Aquí mostramos todos si busca, o vacio si excede y no busca.
                 empleadosVisibles = [];
             }
 
@@ -426,8 +408,7 @@
             }
 
             empleadosVisibles.forEach(emp => {
-                const estadoActual = registroAsistenciaHoy[emp.id] || ''; // '' | 'asistio' | 'no_asistio'
-                
+                const estadoActual = registroAsistenciaHoy[emp.id] || '';
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
                 tr.innerHTML = `
@@ -453,23 +434,19 @@
 
         function filtrarEmpleadosAsistencia() {
             const query = document.getElementById('input-buscar').value.toLowerCase().trim();
-            
             if (query === '' && listaEmpleados.length > 10) {
                 renderizarTablaAsistencia([]);
                 return;
             }
-
             const filtrados = listaEmpleados.filter(emp => 
                 emp.nombres.toLowerCase().includes(query) ||
                 emp.apellidos.toLowerCase().includes(query) ||
                 emp.cedula.toLowerCase().includes(query)
             );
-
             renderizarTablaAsistencia(filtrados);
         }
 
         async function registrarAsistencia(empleadoId, estado) {
-            // Upsert en Supabase para insertar o actualizar la asistencia del día actual
             const { error } = await supabaseClient
                 .from('asistencias')
                 .upsert([
@@ -481,10 +458,7 @@
                 return;
             }
 
-            // Actualizar estado local
             registroAsistenciaHoy[empleadoId] = estado;
-            
-            // Re-renderizar manteniendo el filtro actual
             const query = document.getElementById('input-buscar').value.toLowerCase().trim();
             if (listaEmpleados.length <= 10 || query !== '') {
                 filtrarEmpleadosAsistencia();
@@ -493,7 +467,6 @@
             }
         }
 
-        // Ejecutar al cargar la página
         window.onload = () => {
             verificarSesionPrevia();
         };
