@@ -10,6 +10,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:,">
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
 
@@ -56,7 +57,7 @@
         <!-- VISTA DEL PANEL -->
         <section id="view-dashboard" class="hidden space-y-6">
             
-            <!-- Pestañas de Navegación (Condicionadas por rol) -->
+            <!-- Pestañas de Navegación -->
             <div id="nav-tabs" class="flex border-b border-slate-200 gap-4">
                 <button onclick="cambiarPestana('asistencia')" id="tab-asistencia" class="pb-3 px-4 font-semibold border-b-2 border-indigo-600 text-indigo-600 transition">
                     <i class="fa-solid fa-calendar-check mr-2"></i> Registro de Asistencia Diario
@@ -102,7 +103,7 @@
                 </div>
             </div>
 
-            <!-- CONTENEDOR PESTAÑA: GESTIÓN EMPLEADOS (SOLO NIVEL DIOS) -->
+            <!-- CONTENEDOR PESTAÑA: GESTIÓN EMPLEADOS -->
             <div id="content-empleados" class="hidden space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-100">
                     <h3 class="text-lg font-bold text-slate-800 mb-4"><i class="fa-solid fa-user-plus mr-2 text-indigo-600"></i> Registrar Nuevo Empleado</h3>
@@ -163,14 +164,18 @@
 
     <!-- SCRIPT -->
     <script>
-        const SUPABASE_URL = 'https://mcnvdeawhedyrtkfhoub.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1jbnZkZWF3aGVkeXJ0a2Zob3ViIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE5MTE3NDQsImV4cCI6MjEwNzQ4Nzc0NH0.ECZ4J4qdTl7C5STHDClw0SLfc5ldRczTt-YFrwgJ7eg';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // ==========================================
+        // CONFIGURACIÓN DE SUPABASE
+        // ==========================================
+        const SUPABASE_URL = 'TÚ_SUPABASE_URL'; 
+        const SUPABASE_ANON_KEY = 'TÚ_SUPABASE_ANON_KEY';
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let listaEmpleados = [];
         let registroAsistenciaHoy = {};
         let fechaActualStr = '';
-        let rolUsuario = ''; // 'dios' o 'asistencia'
+        let rolUsuario = ''; 
 
         function inicializarFecha() {
             const hoy = new Date();
@@ -183,35 +188,26 @@
             document.getElementById('fecha-actual-label').textContent = hoy.toLocaleDateString('es-ES', opciones);
         }
 
-        async function calcularHashSHA256(texto) {
-            const encoder = new TextEncoder();
-            const datos = encoder.encode(texto);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', datos);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
-
         async function manejarLogin(event) {
             event.preventDefault();
-            const claveIngresada = document.getElementById('login-password').value;
-            const hashIngresado = await calcularHashSHA256(claveIngresada);
+            const claveIngresada = document.getElementById('login-password').value.trim();
 
             try {
                 const { data, error } = await supabaseClient
                     .from('sys_config')
-                    .select('clave_key, valor_hash');
+                    .select('clave_key, valor_texto');
 
                 if (error || !data) {
-                    alert('Error al verificar credenciales.');
+                    alert('Error al verificar credenciales en Supabase.');
                     return;
                 }
 
                 let rolEncontrado = '';
                 data.forEach(row => {
-                    if (row.clave_key === 'admin_master_hash' && row.valor_hash === hashIngresado) {
+                    if (row.clave_key === 'admin_master' && row.valor_texto === claveIngresada) {
                         rolEncontrado = 'dios';
                     }
-                    if (row.clave_key === 'admin_asistencia_hash' && row.valor_hash === hashIngresado) {
+                    if (row.clave_key === 'admin_asistencia' && row.valor_texto === claveIngresada) {
                         rolEncontrado = 'asistencia';
                     }
                 });
@@ -256,11 +252,11 @@
             if (rol === 'dios') {
                 badge.textContent = 'Administrador Dios';
                 badge.className = "bg-purple-700 text-xs px-3 py-1 rounded-full uppercase tracking-wider font-semibold text-white";
-                navTabs.style.display = 'flex'; // Muestra todas las pestañas
+                navTabs.style.display = 'flex'; 
             } else {
                 badge.textContent = 'Control de Asistencia';
                 badge.className = "bg-emerald-700 text-xs px-3 py-1 rounded-full uppercase tracking-wider font-semibold text-white";
-                navTabs.style.display = 'none'; // Oculta la barra de pestañas para que vayan directo al pase de lista
+                navTabs.style.display = 'none'; 
             }
 
             inicializarFecha();
@@ -268,7 +264,7 @@
         }
 
         function cambiarPestana(pestana) {
-            if (rolUsuario !== 'dios') return; // Seguridad extra
+            if (rolUsuario !== 'dios') return;
             const btnAsis = document.getElementById('tab-asistencia');
             const btnEmp = document.getElementById('tab-empleados');
             const contentAsis = document.getElementById('content-asistencia');
